@@ -11,3 +11,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+@media screen and (max-width: 899px) {
+  html {
+    /* position: fixed;
+    height: 100%;
+    overflow: hidden; */
+    font-size: calc(100vw / 375 * 10);
+  }
+}
+
+@media screen and (min-width: 900px) and (max-width: 1199px) {
+  html {
+    font-size: calc(100vw / 1200 * 10);
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  html {
+    font-size: calc(100vw / 1920 * 10);
+  }
+}
