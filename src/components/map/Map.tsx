@@ -1,34 +1,62 @@
-import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
-import React, { useCallback } from "react";
+import {
+  GoogleMap,
+  MarkerF,
+  StandaloneSearchBox,
+  useJsApiLoader,
+} from "@react-google-maps/api";
+import React, { useCallback, useEffect, useState } from "react";
 
+/**
+ * google map
+ * https://www.npmjs.com/package/@react-google-maps/api
+ */
 export const Map = () => {
-  const mapContainerStyle = {
-    width: "100%",
-    height: "30rem",
-  };
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
 
-  const center = {
-    lat: 37.5511694,
-    lng: 126.9882266,
-  };
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+        },
+        (error) => {
+          alert("Unable to get location information.");
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  }, []);
 
-  const zoom = 16;
-
+  // ============================ google map setting ====================================
   const apiKey: string | undefined = process.env.REACT_APP_GOOGLE_MAP_API_KEY;
 
   if (!apiKey) {
     throw new Error("Google Maps API key is not defined.");
   }
 
+  const center = {
+    lat: latitude,
+    lng: longitude,
+  };
+  const mapContainerStyle = {
+    width: "100%",
+    height: "30rem",
+  };
+
+  const zoom = 16;
+
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: apiKey,
+    libraries: ["places"],
   });
 
   // Callback function to handle map load
   const onLoad = useCallback((map: any) => {
     if (map) {
-      map.setCenter(center);
     }
   }, []);
 
@@ -37,9 +65,11 @@ export const Map = () => {
     console.log("Do your stuff before map is unmounted");
   }, []);
 
+  // ============================ google map setting ====================================
+
   return (
     <div>
-      {isLoaded ? (
+      {isLoaded && latitude && longitude && (
         <GoogleMap
           id="example-map"
           mapContainerStyle={mapContainerStyle}
@@ -47,12 +77,17 @@ export const Map = () => {
           center={center}
           onLoad={onLoad}
           onUnmount={onUnmount}
-          options={{ mapTypeControl: false, disableDefaultUI: true }}
+          options={{ disableDefaultUI: true }}
         >
-          {/* Add your map content here */}
+          <StandaloneSearchBox onPlacesChanged={() => {}}>
+            <input
+              type="text"
+              placeholder="search"
+              style={{ width: `240px`, height: `32px` }}
+            />
+          </StandaloneSearchBox>
+          <MarkerF position={center}></MarkerF>
         </GoogleMap>
-      ) : (
-        <div>Loading...</div>
       )}
     </div>
   );
