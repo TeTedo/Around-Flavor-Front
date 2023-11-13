@@ -4,7 +4,6 @@ import { Map } from "../../components/map/Map";
 export const Home = () => {
   return (
     <div>
-      <div>hi</div>
       <Map />
     </div>
   );
