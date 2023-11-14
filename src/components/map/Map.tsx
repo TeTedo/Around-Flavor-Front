@@ -17,6 +17,7 @@ export const Map = () => {
   const [radius, setRadius] = useState(1000);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
+  const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -66,8 +67,8 @@ export const Map = () => {
     strokeWeight: 2,
     fillColor: "#FF0000",
     fillOpacity: 0.35,
-    center: center, // Center of the circle
-    radius: radius, // Radius in meters
+    center, // Center of the circle
+    radius, // Radius in meters
   };
 
   // Callback function to handle map load
@@ -89,13 +90,74 @@ export const Map = () => {
     console.log("onClick args: ", e);
   };
 
+  /**
+   * https://developers.google.com/maps/documentation/javascript/places?hl=ko
+   */
+  const searchNearbyRestaurants = () => {
+    // 사용자의 현재 위치를 기반으로 주변 레스토랑 검색
+    if (!map) {
+      alert("map can't loading...");
+      return;
+    }
+    const placesService = new google.maps.places.PlacesService(map);
+    performSearch(placesService, null);
+  };
+
+  const performSearch = (
+    placesService: google.maps.places.PlacesService,
+    pageToken: Number | null
+  ) => {
+    let allResults: any[] = [];
+    const request = {
+      location: center,
+      radius: radius,
+      type: "restaurant", // 레스토랑 타입으로 필터링
+      pageToken,
+    };
+    placesService.nearbySearch(request, (results, status, pagination) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        allResults = allResults.concat(results);
+
+        if (pagination?.hasNextPage) {
+          pagination.nextPage(); // 다음 페이지 요청
+        } else {
+          console.log(allResults);
+          if (!allResults.length) {
+            // allResults가 비어있는 경우
+            alert("There is no restaurant near by marker.");
+            return;
+          }
+
+          // 기존 마커 제거
+          if (randMarker) {
+            randMarker.setMap(null);
+          }
+
+          const place = allResults.filter(
+            (store) => store.business_status === "OPERATIONAL"
+          );
+
+          // 새로운 마커 생성
+          const placeLen = place.length;
+          const randNum = Math.floor(Math.random() * placeLen);
+          const randPlace = new google.maps.Marker({
+            map: map,
+            position: place[randNum].geometry?.location,
+            title: place[randNum].name,
+          });
+
+          setRandMarker(randPlace);
+        }
+      }
+    });
+  };
   // ============================ google map setting ====================================
 
   useEffect(() => {
     if (map && circle) {
       circle.setRadius(radius);
     }
-  }, [radius]);
+  }, [radius, map, circle]);
   return (
     <div>
       {isLoaded && latitude && longitude && (
@@ -122,6 +184,7 @@ export const Map = () => {
             <option value="10000">10km 이내</option>
             <option value="30000">30km 이내</option>
           </select>
+          <button onClick={searchNearbyRestaurants}>주변 식당 찾기</button>
           <GoogleMap
             id="search-box-example"
             mapContainerStyle={mapContainerStyle}
