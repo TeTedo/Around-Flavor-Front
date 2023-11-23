@@ -14,7 +14,7 @@ import React, { useCallback, useEffect, useState } from "react";
 export const Map = () => {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
-  const [radius, setRadius] = useState(1000);
+  const [radius, setRadius] = useState(300);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
@@ -177,12 +177,12 @@ export const Map = () => {
             onChange={(e) => {
               setRadius(Number(e.target.value));
             }}
+            defaultValue={"300"}
           >
+            <option value="100">100m 이내</option>
+            <option value="300">300m 이내</option>
+            <option value="500">500m 이내</option>
             <option value="1000">1km 이내</option>
-            <option value="3000">3km 이내</option>
-            <option value="5000">5km 이내</option>
-            <option value="10000">10km 이내</option>
-            <option value="30000">30km 이내</option>
           </select>
           <button onClick={searchNearbyRestaurants}>주변 식당 찾기</button>
           <GoogleMap
