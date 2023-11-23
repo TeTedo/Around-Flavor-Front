@@ -113,10 +113,24 @@ export const Map = () => {
       radius: radius,
       type: "restaurant", // 레스토랑 타입으로 필터링
       pageToken,
+      openNow: true,
     };
-    placesService.nearbySearch(request, (results, status, pagination) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        allResults = allResults.concat(results);
+    placesService.nearbySearch(
+      request,
+      (
+        results: google.maps.places.PlaceResult[] | null,
+        status: google.maps.places.PlacesServiceStatus,
+        pagination: google.maps.places.PlaceSearchPagination | null
+      ) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK) {
+          alert("Failed to load random place.");
+          return;
+        }
+        const operationalPlaces = results?.filter(
+          (store) => store.business_status === "OPERATIONAL"
+        );
+
+        allResults = allResults.concat(operationalPlaces);
 
         if (pagination?.hasNextPage) {
           pagination.nextPage(); // 다음 페이지 요청
@@ -133,9 +147,7 @@ export const Map = () => {
             randMarker.setMap(null);
           }
 
-          const place = allResults.filter(
-            (store) => store.business_status === "OPERATIONAL"
-          );
+          const place = allResults;
 
           // 새로운 마커 생성
           const placeLen = place.length;
@@ -149,7 +161,7 @@ export const Map = () => {
           setRandMarker(randPlace);
         }
       }
-    });
+    );
   };
   // ============================ google map setting ====================================
 
