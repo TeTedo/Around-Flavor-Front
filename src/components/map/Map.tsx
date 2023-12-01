@@ -5,7 +5,7 @@ import {
   StandaloneSearchBox,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 /**
  * google map
@@ -18,6 +18,10 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
+  const [noNearRes, setNoNearRes] = useState<boolean | null>(null);
+  const [nearRes, setNearRes] = useState<google.maps.places.PlaceResult[]>([]);
+  const [selectedRes, setSelectedRes] =
+    useState<google.maps.places.PlaceResult>();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -42,10 +46,12 @@ export const Map = () => {
     throw new Error("Google Maps API key is not defined.");
   }
 
-  const center = {
-    lat: latitude,
-    lng: longitude,
-  };
+  const center = useMemo(() => {
+    return {
+      lat: latitude,
+      lng: longitude,
+    };
+  }, [latitude, longitude]);
 
   const mapContainerStyle = {
     width: "100%",
@@ -53,7 +59,7 @@ export const Map = () => {
   };
 
   const zoom = 16;
-  const libraries: Libraries = ["places"];
+  const libraries: Libraries = useMemo(() => ["places"], []);
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -99,70 +105,174 @@ export const Map = () => {
       alert("map can't loading...");
       return;
     }
+
     const placesService = new google.maps.places.PlacesService(map);
-    performSearch(placesService, null);
+    performSearch(placesService, true);
   };
 
   const performSearch = (
     placesService: google.maps.places.PlacesService,
-    pageToken: Number | null
+    isFirstSearch: boolean
   ) => {
-    let allResults: any[] = [];
+    if (noNearRes) {
+      alert("There is no restaurant near by marker.");
+      return;
+    }
+
+    if (nearRes[0]) {
+      selectNewResByList(nearRes);
+      return;
+    }
+
+    if (isFirstSearch) randSearch(placesService);
+    else randSearch(placesService);
+  };
+
+  const firstSearch = (placesService: google.maps.places.PlacesService) => {
     const request = {
       location: center,
-      radius: radius,
       type: "restaurant", // 레스토랑 타입으로 필터링
-      pageToken,
       openNow: true,
+      radius,
     };
+
     placesService.nearbySearch(
       request,
       (
         results: google.maps.places.PlaceResult[] | null,
-        status: google.maps.places.PlacesServiceStatus,
-        pagination: google.maps.places.PlaceSearchPagination | null
+        status: google.maps.places.PlacesServiceStatus
       ) => {
         if (status !== google.maps.places.PlacesServiceStatus.OK) {
           alert("Failed to load random place.");
           return;
         }
-        const operationalPlaces = results?.filter(
+
+        if (results === null) {
+          alert("There is no restaurant near by marker.");
+          setNoNearRes(true);
+          return;
+        }
+
+        const operationalPlaces = results.filter(
           (store) => store.business_status === "OPERATIONAL"
         );
 
-        allResults = allResults.concat(operationalPlaces);
+        if (operationalPlaces.length === 0) {
+          alert("There is no restaurant near by marker.");
+          setNoNearRes(true);
+          return;
+        }
 
-        if (pagination?.hasNextPage) {
-          pagination.nextPage(); // 다음 페이지 요청
+        if (results.length < 20) {
+          setNearRes(operationalPlaces);
+          selectNewResByList(operationalPlaces);
         } else {
-          console.log(allResults);
-          if (!allResults.length) {
-            // allResults가 비어있는 경우
-            alert("There is no restaurant near by marker.");
-            return;
-          }
-
-          // 기존 마커 제거
-          if (randMarker) {
-            randMarker.setMap(null);
-          }
-
-          const place = allResults;
-
-          // 새로운 마커 생성
-          const placeLen = place.length;
-          const randNum = Math.floor(Math.random() * placeLen);
-          const randPlace = new google.maps.Marker({
-            map: map,
-            position: place[randNum].geometry?.location,
-            title: place[randNum].name,
-          });
-
-          setRandMarker(randPlace);
+          performSearch(placesService, false);
         }
       }
     );
   };
+
+  const selectNewResByList = (list: google.maps.places.PlaceResult[]) => {
+    const len = list.length;
+    const rand = Math.floor(Math.random() * len);
+    const randRes = list[rand];
+    setSelectedRes(randRes);
+    setNewMarker(randRes);
+  };
+
+  const randSearch = (placesService: google.maps.places.PlacesService) => {
+    const request = {
+      location: generateRandomPoint(),
+      type: "restaurant", // 레스토랑 타입으로 필터링
+      openNow: true,
+      rankBy: google.maps.places.RankBy.DISTANCE,
+    };
+
+    placesService.nearbySearch(
+      request,
+      (
+        results: google.maps.places.PlaceResult[] | null,
+        status: google.maps.places.PlacesServiceStatus
+      ) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK) {
+          alert("Failed to load random place.");
+          return;
+        }
+
+        if (results === null) {
+          alert("There is no restaurant near by marker.");
+          setNoNearRes(true);
+          return;
+        }
+
+        const findOne = results.find(
+          (store) =>
+            store.business_status === "OPERATIONAL" && isWithinRadius(store)
+        );
+
+        if (findOne) {
+          setNewMarker(findOne);
+        } else {
+          randSearch(placesService);
+          return;
+        }
+      }
+    );
+  };
+
+  function isWithinRadius(placeLocation: google.maps.places.PlaceResult) {
+    if (placeLocation.geometry?.location === undefined) return false;
+
+    const location = {
+      lat: placeLocation.geometry.location.lat(),
+      lng: placeLocation.geometry.location.lng(),
+    };
+
+    return (
+      google.maps.geometry.spherical.computeDistanceBetween(location, center) <=
+      radius
+    );
+  }
+
+  const setNewMarker = (place: google.maps.places.PlaceResult) => {
+    if (place.geometry === undefined) return;
+
+    // 기존 마커 제거
+    if (randMarker) {
+      randMarker.setMap(null);
+    }
+
+    // 새로운 마커 생성
+    const randPlace = new google.maps.Marker({
+      map: map,
+      position: place.geometry.location,
+      title: place.name,
+    });
+
+    setRandMarker(randPlace);
+  };
+
+  useEffect(() => {}, [randMarker]);
+
+  function generateRandomPoint() {
+    const y0 = center.lat;
+    const x0 = center.lng;
+    const rd = radius / 111300; // about 111300 meters in one degree
+
+    const u = Math.random();
+    const v = Math.random();
+
+    const w = rd * Math.sqrt(u);
+    const t = 2 * Math.PI * v;
+    const x = w * Math.cos(t);
+    const y = w * Math.sin(t);
+
+    const newlat = y + y0;
+    const newlon = x + x0;
+
+    return new google.maps.LatLng(newlat, newlon);
+  }
   // ============================ google map setting ====================================
 
   useEffect(() => {
