@@ -19,7 +19,7 @@ jobs:
       - name: Build
         run: |
           npm install
-          npm run build # Replace with your build script
+          npm run build
 
       - name: Deploy to S3
         uses: jakejarvis/s3-sync-action@master

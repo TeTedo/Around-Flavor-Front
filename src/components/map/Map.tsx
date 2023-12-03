@@ -21,8 +21,7 @@ export const Map = () => {
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
   const [noNearRes, setNoNearRes] = useState<boolean | null>(null);
   const [nearRes, setNearRes] = useState<google.maps.places.PlaceResult[]>([]);
-  const [selectedRes, setSelectedRes] =
-    useState<google.maps.places.PlaceResult>();
+  const [, setSelectedRes] = useState<google.maps.places.PlaceResult>();
   const [openNow, setOpenNow] = useState<boolean>(true);
 
   const debounce = useDebounceHook();
