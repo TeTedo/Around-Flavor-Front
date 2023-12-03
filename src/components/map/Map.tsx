@@ -6,6 +6,7 @@ import {
   useJsApiLoader,
 } from "@react-google-maps/api";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useDebounceHook } from "../../hook/useDebounceHook";
 
 /**
  * google map
@@ -22,6 +23,9 @@ export const Map = () => {
   const [nearRes, setNearRes] = useState<google.maps.places.PlaceResult[]>([]);
   const [selectedRes, setSelectedRes] =
     useState<google.maps.places.PlaceResult>();
+  const [openNow, setOpenNow] = useState<boolean>(true);
+
+  const debounce = useDebounceHook();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -99,6 +103,7 @@ export const Map = () => {
   /**
    * https://developers.google.com/maps/documentation/javascript/places?hl=ko
    */
+
   const searchNearbyRestaurants = () => {
     // 사용자의 현재 위치를 기반으로 주변 레스토랑 검색
     if (!map) {
@@ -124,15 +129,17 @@ export const Map = () => {
       return;
     }
 
-    if (isFirstSearch) randSearch(placesService);
+    if (isFirstSearch) firstSearch(placesService);
     else randSearch(placesService);
   };
+
+  const debounceSearch = debounce(searchNearbyRestaurants, 500);
 
   const firstSearch = (placesService: google.maps.places.PlacesService) => {
     const request = {
       location: center,
       type: "restaurant", // 레스토랑 타입으로 필터링
-      openNow: true,
+      openNow,
       radius,
     };
 
@@ -185,7 +192,7 @@ export const Map = () => {
     const request = {
       location: generateRandomPoint(),
       type: "restaurant", // 레스토랑 타입으로 필터링
-      openNow: true,
+      openNow,
       rankBy: google.maps.places.RankBy.DISTANCE,
     };
 
@@ -306,7 +313,16 @@ export const Map = () => {
             <option value="500">500m 이내</option>
             <option value="1000">1km 이내</option>
           </select>
-          <button onClick={searchNearbyRestaurants}>주변 식당 찾기</button>
+          <select
+            onChange={(e) => {
+              setOpenNow(e.target.value ? true : false);
+            }}
+            defaultValue={1}
+          >
+            <option value={1}>영업 중</option>
+            <option value={0}>모든 식당</option>
+          </select>
+          <button onClick={debounceSearch}>주변 식당 찾기</button>
           <GoogleMap
             id="search-box-example"
             mapContainerStyle={mapContainerStyle}
