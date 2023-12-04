@@ -24,8 +24,6 @@ export const Map = () => {
   const [, setSelectedRes] = useState<google.maps.places.PlaceResult>();
   const [openNow, setOpenNow] = useState<boolean>(true);
 
-  const debounce = useDebounceHook();
-
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -241,11 +239,6 @@ export const Map = () => {
 
   const setNewMarker = (place: google.maps.places.PlaceResult) => {
     if (place.geometry === undefined) return;
-
-    // 기존 마커 제거
-    if (randMarker) {
-      randMarker.setMap(null);
-    }
 
     // 새로운 마커 생성
     const randPlace = new google.maps.Marker({
