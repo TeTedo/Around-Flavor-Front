@@ -132,8 +132,6 @@ export const Map = () => {
     else randSearch(placesService);
   };
 
-  const debounceSearch = debounce(searchNearbyRestaurants, 500);
-
   const firstSearch = (placesService: google.maps.places.PlacesService) => {
     const request = {
       location: center,
@@ -259,7 +257,13 @@ export const Map = () => {
     setRandMarker(randPlace);
   };
 
-  useEffect(() => {}, [randMarker]);
+  useEffect(() => {
+    return () => {
+      if (randMarker) {
+        randMarker.setMap(null);
+      }
+    };
+  }, [randMarker]);
 
   function generateRandomPoint() {
     const y0 = center.lat;
@@ -321,7 +325,7 @@ export const Map = () => {
             <option value={1}>영업 중</option>
             <option value={0}>모든 식당</option>
           </select>
-          <button onClick={debounceSearch}>주변 식당 찾기</button>
+          <button onClick={searchNearbyRestaurants}>주변 식당 찾기</button>
           <GoogleMap
             id="search-box-example"
             mapContainerStyle={mapContainerStyle}
