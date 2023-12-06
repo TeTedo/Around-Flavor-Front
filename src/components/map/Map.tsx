@@ -6,22 +6,27 @@ import {
   useJsApiLoader,
 } from "@react-google-maps/api";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSetRecoilState } from "recoil";
+import { pickedPlaceState } from "recoil/placeState";
 
 /**
  * google map
  * https://www.npmjs.com/package/@react-google-maps/api
  */
-export const Map = () => {
+export const Map: React.FC = () => {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
   const [radius, setRadius] = useState(300);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
-  const [noNearRes, setNoNearRes] = useState<boolean | null>(null);
-  const [nearRes, setNearRes] = useState<google.maps.places.PlaceResult[]>([]);
-  const [, setSelectedRes] = useState<google.maps.places.PlaceResult>();
+  const [noNearPlace, setNoNearPlace] = useState<boolean>(false);
+  const [cachePlaces, setCachePlaces] = useState<
+    google.maps.places.PlaceResult[]
+  >([]);
   const [openNow, setOpenNow] = useState<boolean>(true);
+
+  const setPickedPlace = useSetRecoilState(pickedPlaceState);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -40,7 +45,10 @@ export const Map = () => {
   }, []);
 
   // ============================ google map setting ====================================
-  const apiKey: string | undefined = process.env.REACT_APP_GOOGLE_MAP_API_KEY;
+  const apiKey: string | undefined = useMemo(
+    () => process.env.REACT_APP_GOOGLE_MAP_API_KEY,
+    []
+  );
 
   if (!apiKey) {
     throw new Error("Google Maps API key is not defined.");
@@ -115,13 +123,13 @@ export const Map = () => {
     placesService: google.maps.places.PlacesService,
     isFirstSearch: boolean
   ) => {
-    if (noNearRes) {
+    if (noNearPlace) {
       alert("There is no restaurant near by marker.");
       return;
     }
 
-    if (nearRes[0]) {
-      selectNewResByList(nearRes);
+    if (cachePlaces[0]) {
+      pickPlaceByList(cachePlaces);
       return;
     }
 
@@ -150,7 +158,7 @@ export const Map = () => {
 
         if (results === null) {
           alert("There is no restaurant near by marker.");
-          setNoNearRes(true);
+          setNoNearPlace(true);
           return;
         }
 
@@ -160,13 +168,13 @@ export const Map = () => {
 
         if (operationalPlaces.length === 0) {
           alert("There is no restaurant near by marker.");
-          setNoNearRes(true);
+          setNoNearPlace(true);
           return;
         }
 
         if (results.length < 20) {
-          setNearRes(operationalPlaces);
-          selectNewResByList(operationalPlaces);
+          setCachePlaces(operationalPlaces);
+          pickPlaceByList(operationalPlaces);
         } else {
           performSearch(placesService, false);
         }
@@ -174,11 +182,11 @@ export const Map = () => {
     );
   };
 
-  const selectNewResByList = (list: google.maps.places.PlaceResult[]) => {
+  const pickPlaceByList = (list: google.maps.places.PlaceResult[]) => {
     const len = list.length;
     const rand = Math.floor(Math.random() * len);
     const randRes = list[rand];
-    setSelectedRes(randRes);
+    setPickedPlace(randRes);
     setNewMarker(randRes);
   };
 
@@ -203,7 +211,7 @@ export const Map = () => {
 
         if (results === null) {
           alert("There is no restaurant near by marker.");
-          setNoNearRes(true);
+          setNoNearPlace(true);
           return;
         }
 
@@ -303,10 +311,10 @@ export const Map = () => {
             }}
             defaultValue={"300"}
           >
-            <option value="100">100m 이내</option>
-            <option value="300">300m 이내</option>
-            <option value="500">500m 이내</option>
-            <option value="1000">1km 이내</option>
+            <option value="100">100m</option>
+            <option value="300">300m</option>
+            <option value="500">500m</option>
+            <option value="1000">1km</option>
           </select>
           <select
             onChange={(e) => {
@@ -314,10 +322,10 @@ export const Map = () => {
             }}
             defaultValue={1}
           >
-            <option value={1}>영업 중</option>
-            <option value={0}>모든 식당</option>
+            <option value={1}>Open Now</option>
+            <option value={0}>All Restaurant</option>
           </select>
-          <button onClick={searchNearbyRestaurants}>주변 식당 찾기</button>
+          <button onClick={searchNearbyRestaurants}>Random Pick!</button>
           <GoogleMap
             id="search-box-example"
             mapContainerStyle={mapContainerStyle}
