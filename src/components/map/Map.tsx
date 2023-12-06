@@ -8,6 +8,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { pickedPlaceState } from "recoil/placeState";
+import { MapUtils } from "utils/mapUtils";
 
 /**
  * google map
@@ -25,6 +26,9 @@ export const Map: React.FC = () => {
     google.maps.places.PlaceResult[]
   >([]);
   const [openNow, setOpenNow] = useState<boolean>(true);
+  useEffect(() => {
+    if (openNow === false) setCachePlaces([]);
+  }, [openNow]);
 
   const setPickedPlace = useSetRecoilState(pickedPlaceState);
 
@@ -108,19 +112,23 @@ export const Map: React.FC = () => {
    * https://developers.google.com/maps/documentation/javascript/places?hl=ko
    */
 
+  const mapService: google.maps.places.PlacesService | null = useMemo(() => {
+    if (!map) return null;
+    return new google.maps.places.PlacesService(map);
+  }, [map]);
+
   const searchNearbyRestaurants = () => {
     // 사용자의 현재 위치를 기반으로 주변 레스토랑 검색
-    if (!map) {
-      alert("map can't loading...");
+    if (!map || !mapService) {
+      alert("Google map can't loading...");
       return;
     }
 
-    const placesService = new google.maps.places.PlacesService(map);
-    performSearch(placesService, true);
+    performSearch(mapService, true);
   };
 
   const performSearch = (
-    placesService: google.maps.places.PlacesService,
+    mapService: google.maps.places.PlacesService,
     isFirstSearch: boolean
   ) => {
     if (noNearPlace) {
@@ -129,15 +137,15 @@ export const Map: React.FC = () => {
     }
 
     if (cachePlaces[0]) {
-      pickPlaceByList(cachePlaces);
+      pickPlaceByCache(cachePlaces, mapService);
       return;
     }
 
-    if (isFirstSearch) firstSearch(placesService);
-    else randSearch(placesService);
+    if (isFirstSearch) firstSearch(mapService);
+    else randSearch(mapService);
   };
 
-  const firstSearch = (placesService: google.maps.places.PlacesService) => {
+  const firstSearch = (mapService: google.maps.places.PlacesService) => {
     const request = {
       location: center,
       type: "restaurant", // 레스토랑 타입으로 필터링
@@ -145,7 +153,7 @@ export const Map: React.FC = () => {
       radius,
     };
 
-    placesService.nearbySearch(
+    mapService.nearbySearch(
       request,
       (
         results: google.maps.places.PlaceResult[] | null,
@@ -174,25 +182,28 @@ export const Map: React.FC = () => {
 
         if (results.length < 20) {
           setCachePlaces(operationalPlaces);
-          pickPlaceByList(operationalPlaces);
+          pickPlaceByCache(operationalPlaces, mapService);
         } else {
-          performSearch(placesService, false);
+          performSearch(mapService, false);
         }
       }
     );
   };
 
-  const pickPlaceByList = (list: google.maps.places.PlaceResult[]) => {
-    const len = list.length;
+  const pickPlaceByCache = (
+    cache: google.maps.places.PlaceResult[],
+    mapService: google.maps.places.PlacesService
+  ) => {
+    const len = cache.length;
     const rand = Math.floor(Math.random() * len);
-    const randRes = list[rand];
-    setPickedPlace(randRes);
-    setNewMarker(randRes);
+    const randPlace = cache[rand];
+    setPickedPlace(randPlace);
+    setNewMarker(randPlace);
   };
 
   const randSearch = (placesService: google.maps.places.PlacesService) => {
     const request = {
-      location: generateRandomPoint(),
+      location: MapUtils.generateRandomPoint(center.lat, center.lng, radius),
       type: "restaurant", // 레스토랑 타입으로 필터링
       openNow,
       rankBy: google.maps.places.RankBy.DISTANCE,
@@ -222,6 +233,7 @@ export const Map: React.FC = () => {
 
         if (findOne) {
           setNewMarker(findOne);
+          setPickedPlace(findOne);
         } else {
           randSearch(placesService);
           return;
@@ -265,24 +277,6 @@ export const Map: React.FC = () => {
     };
   }, [randMarker]);
 
-  function generateRandomPoint() {
-    const y0 = center.lat;
-    const x0 = center.lng;
-    const rd = radius / 111300; // about 111300 meters in one degree
-
-    const u = Math.random();
-    const v = Math.random();
-
-    const w = rd * Math.sqrt(u);
-    const t = 2 * Math.PI * v;
-    const x = w * Math.cos(t);
-    const y = w * Math.sin(t);
-
-    const newlat = y + y0;
-    const newlon = x + x0;
-
-    return new google.maps.LatLng(newlat, newlon);
-  }
   // ============================ google map setting ====================================
 
   useEffect(() => {
@@ -290,6 +284,7 @@ export const Map: React.FC = () => {
       circle.setRadius(radius);
     }
   }, [radius, map, circle]);
+
   return (
     <div>
       {isLoaded && latitude && longitude && (
@@ -318,12 +313,12 @@ export const Map: React.FC = () => {
           </select>
           <select
             onChange={(e) => {
-              setOpenNow(e.target.value ? true : false);
+              setOpenNow(e.target.value === "open" ? true : false);
             }}
-            defaultValue={1}
+            defaultValue={"open"}
           >
-            <option value={1}>Open Now</option>
-            <option value={0}>All Restaurant</option>
+            <option value={"open"}>Open Now</option>
+            <option value={"all"}>All Restaurant</option>
           </select>
           <button onClick={searchNearbyRestaurants}>Random Pick!</button>
           <GoogleMap
