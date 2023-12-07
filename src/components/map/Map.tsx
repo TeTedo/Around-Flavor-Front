@@ -5,9 +5,15 @@ import {
   StandaloneSearchBox,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSetRecoilState } from "recoil";
-import { pickedPlaceState } from "recoil/placeState";
+import { pickedPlaceSelector } from "recoil/placeState";
 import { MapUtils } from "utils/mapUtils";
 
 /**
@@ -18,7 +24,6 @@ export const Map: React.FC = () => {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
   const [radius, setRadius] = useState(300);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
   const [noNearPlace, setNoNearPlace] = useState<boolean>(false);
@@ -26,11 +31,16 @@ export const Map: React.FC = () => {
     google.maps.places.PlaceResult[]
   >([]);
   const [openNow, setOpenNow] = useState<boolean>(true);
+
   useEffect(() => {
     if (openNow === false) setCachePlaces([]);
   }, [openNow]);
 
-  const setPickedPlace = useSetRecoilState(pickedPlaceState);
+  const setPickedPlace =
+    useSetRecoilState<google.maps.places.PlaceResult | null>(
+      pickedPlaceSelector
+    );
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -79,22 +89,22 @@ export const Map: React.FC = () => {
     libraries,
   });
 
-  const circleOptions = {
-    strokeColor: "#FF0000", // Red color
-    strokeOpacity: 0.8,
-    strokeWeight: 2,
-    fillColor: "#FF0000",
-    fillOpacity: 0.35,
-    center, // Center of the circle
-    radius, // Radius in meters
-  };
-
   // Callback function to handle map load
-  const onLoad = (map: google.maps.Map | null) => {
-    if (map) {
+  const onLoad = (loadedMap: google.maps.Map | null) => {
+    if (loadedMap) {
+      const circleOptions = {
+        strokeColor: "#FF0000", // Red color
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: "#FF0000",
+        fillOpacity: 0.35,
+        center, // Center of the circle
+        radius, // Radius in meters
+      };
+
       const circle = new google.maps.Circle(circleOptions);
-      circle.setMap(map);
-      setMap(map);
+      circle.setMap(loadedMap);
+      mapRef.current = loadedMap;
       setCircle(circle);
     }
   };
@@ -113,13 +123,13 @@ export const Map: React.FC = () => {
    */
 
   const mapService: google.maps.places.PlacesService | null = useMemo(() => {
-    if (!map) return null;
-    return new google.maps.places.PlacesService(map);
-  }, [map]);
+    if (!mapRef.current) return null;
+    return new google.maps.places.PlacesService(mapRef.current);
+  }, [mapRef.current]);
 
   const searchNearbyRestaurants = () => {
     // 사용자의 현재 위치를 기반으로 주변 레스토랑 검색
-    if (!map || !mapService) {
+    if (!mapRef.current || !mapService) {
       alert("Google map can't loading...");
       return;
     }
@@ -261,7 +271,7 @@ export const Map: React.FC = () => {
 
     // 새로운 마커 생성
     const randPlace = new google.maps.Marker({
-      map: map,
+      map: mapRef.current,
       position: place.geometry.location,
       title: place.name,
     });
@@ -277,13 +287,12 @@ export const Map: React.FC = () => {
     };
   }, [randMarker]);
 
-  // ============================ google map setting ====================================
-
   useEffect(() => {
-    if (map && circle) {
+    if (mapRef && circle) {
       circle.setRadius(radius);
     }
-  }, [radius, map, circle]);
+  }, [radius, mapRef, circle]);
+  // ============================ google map setting ====================================
 
   return (
     <div>

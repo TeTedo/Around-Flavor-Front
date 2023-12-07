@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { pickedPlaceState } from "recoil/placeState";
+import { pickedPlaceSelector } from "recoil/placeState";
 import {
   PickedPlaceWrapper,
   PlacePhoto,
@@ -9,7 +9,7 @@ import {
 
 export const PickedPlace: React.FC = () => {
   const pickedPlace = useRecoilValue<google.maps.places.PlaceResult | null>(
-    pickedPlaceState
+    pickedPlaceSelector
   );
   const [placeDetails, setPlaceDetails] =
     useState<google.maps.places.PlaceResult | null>(null);
@@ -41,11 +41,13 @@ export const PickedPlace: React.FC = () => {
       {placeDetails.photos?.map((photo, idx) => (
         <PlacePhoto src={photo.getUrl()} key={photo.getUrl()} loading="lazy" />
       ))}
-      <div>rating : {placeDetails.rating}</div>
+      <div>
+        rating - google : {placeDetails.rating} AF : {}
+      </div>
       <div>
         reviews ({placeDetails.reviews?.length})
         {placeDetails.reviews?.map((review) => (
-          <div>
+          <div key={review.text + review.time}>
             <ReviewerProfile
               src={review.profile_photo_url}
               alt="reviewer_profile"
