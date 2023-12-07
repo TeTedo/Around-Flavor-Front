@@ -5,3 +5,8 @@ export const PlacePhoto = styled.img`
   width: 3rem;
   height: 3rem;
 `;
+
+export const ReviewerProfile = styled.img`
+  width: 3rem;
+  height: 3rem;
+`;
