@@ -5,13 +5,7 @@ import {
   StandaloneSearchBox,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { pickedPlaceSelector } from "recoil/placeState";
 import { MapUtils } from "utils/mapUtils";
@@ -40,7 +34,7 @@ export const Map: React.FC = () => {
     useSetRecoilState<google.maps.places.PlaceResult | null>(
       pickedPlaceSelector
     );
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -104,7 +98,7 @@ export const Map: React.FC = () => {
 
       const circle = new google.maps.Circle(circleOptions);
       circle.setMap(loadedMap);
-      mapRef.current = loadedMap;
+      setMap(loadedMap);
       setCircle(circle);
     }
   };
@@ -123,13 +117,13 @@ export const Map: React.FC = () => {
    */
 
   const mapService: google.maps.places.PlacesService | null = useMemo(() => {
-    if (!mapRef.current) return null;
-    return new google.maps.places.PlacesService(mapRef.current);
-  }, [mapRef.current]);
+    if (!map) return null;
+    return new google.maps.places.PlacesService(map);
+  }, [map]);
 
   const searchNearbyRestaurants = () => {
     // 사용자의 현재 위치를 기반으로 주변 레스토랑 검색
-    if (!mapRef.current || !mapService) {
+    if (!map || !mapService) {
       alert("Google map can't loading...");
       return;
     }
@@ -271,7 +265,7 @@ export const Map: React.FC = () => {
 
     // 새로운 마커 생성
     const randPlace = new google.maps.Marker({
-      map: mapRef.current,
+      map,
       position: place.geometry.location,
       title: place.name,
     });
@@ -288,10 +282,10 @@ export const Map: React.FC = () => {
   }, [randMarker]);
 
   useEffect(() => {
-    if (mapRef && circle) {
+    if (map && circle) {
       circle.setRadius(radius);
     }
-  }, [radius, mapRef, circle]);
+  }, [radius, map, circle]);
   // ============================ google map setting ====================================
 
   return (
