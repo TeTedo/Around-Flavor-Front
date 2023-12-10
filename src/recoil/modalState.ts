@@ -14,3 +14,8 @@ export const modalState = atom<ModalType>({
     children: "",
   },
 });
+
+export const placeModalState = atom<boolean>({
+  key: "placeModalState",
+  default: false,
+});

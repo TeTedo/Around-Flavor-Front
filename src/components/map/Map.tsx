@@ -5,6 +5,8 @@ import {
   StandaloneSearchBox,
   useJsApiLoader,
 } from "@react-google-maps/api";
+import { PlaceModal } from "components/modal/place/PlaceModal";
+import { MAP_SIZE } from "constants/mapConstant";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { pickedPlaceSelector } from "recoil/placeState";
@@ -68,11 +70,6 @@ export const Map: React.FC = () => {
       lng: longitude,
     };
   }, [latitude, longitude]);
-
-  const mapContainerStyle = {
-    width: "100%",
-    height: "30rem",
-  };
 
   const zoom = 16;
   const libraries: Libraries = useMemo(() => ["places"], []);
@@ -292,17 +289,19 @@ export const Map: React.FC = () => {
     <div>
       {isLoaded && latitude && longitude && (
         <>
-          <StandaloneSearchBox
-            onPlacesChanged={() => {
-              console.log();
-            }}
+          <PlaceModal />
+          <GoogleMap
+            id="search-box-example"
+            mapContainerStyle={MAP_SIZE}
+            zoom={zoom}
+            center={center}
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+            options={{ disableDefaultUI: true }}
+            onClick={onClick}
           >
-            <input
-              type="text"
-              placeholder="search"
-              style={{ width: `240px`, height: `32px` }}
-            />
-          </StandaloneSearchBox>
+            <MarkerF position={center}></MarkerF>
+          </GoogleMap>
           <select
             onChange={(e) => {
               setRadius(Number(e.target.value));
@@ -324,18 +323,6 @@ export const Map: React.FC = () => {
             <option value={"all"}>All Restaurant</option>
           </select>
           <button onClick={searchNearbyRestaurants}>Random Pick!</button>
-          <GoogleMap
-            id="search-box-example"
-            mapContainerStyle={mapContainerStyle}
-            zoom={zoom}
-            center={center}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
-            options={{ disableDefaultUI: true }}
-            onClick={onClick}
-          >
-            <MarkerF position={center}></MarkerF>
-          </GoogleMap>
         </>
       )}
     </div>
