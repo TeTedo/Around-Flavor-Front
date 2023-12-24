@@ -2,7 +2,6 @@ import {
   GoogleMap,
   Libraries,
   MarkerF,
-  StandaloneSearchBox,
   useJsApiLoader,
 } from "@react-google-maps/api";
 import { PlaceModal } from "components/modal/place/PlaceModal";
@@ -286,7 +285,7 @@ export const Map: React.FC = () => {
   // ============================ google map setting ====================================
 
   return (
-    <div>
+    <div style={{ width: "100%", height: "100vh" }}>
       {isLoaded && latitude && longitude && (
         <>
           <PlaceModal />
