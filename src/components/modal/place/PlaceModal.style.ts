@@ -1,33 +1,41 @@
 import { styled } from "styled-components";
 import { MAP_SIZE } from "constants/mapConstant";
 
-interface IPlacePicked {
-  $isPicked: boolean;
-}
-
-export const PlaceModalWrapper = styled.div<IPlacePicked>`
-  width: 100%;
+export const PlaceModalWrapper = styled.div`
+  width: 50%;
   height: ${MAP_SIZE.height};
-  position: absolute;
   z-index: 99;
-  background-color: ${(props) => (props.$isPicked ? "" : "#00000078")};
-
-  border-radius: 1rem;
   display: flex;
   flex-direction: row-reverse;
 `;
 
 export const ContentWrapper = styled.div`
-  width: 50%;
+  width: 100%;
   background: #eadfc8;
   padding-left: 7rem;
-  padding-top: 20rem;
+  padding-top: 15rem;
+`;
+
+export const PickedContentWrapper = styled.div`
+  width: 100%;
+  background: #fdeeeb;
+  padding-left: 7rem;
+  padding-top: 15rem;
 `;
 
 export const Title = styled.div`
   font-size: 5rem;
   font-weight: 800;
 `;
+
+export const PickedTitle = styled.div`
+  font-size: 5rem;
+  font-weight: 800;
+`;
+
+interface ISelected {
+  $isSelected: boolean;
+}
 
 export const SelectOption = {
   Wrapper: styled.div`
@@ -44,10 +52,11 @@ export const SelectOption = {
     display: flex;
     gap: 2rem;
   `,
-  Btn: styled.div`
+  Btn: styled.div<ISelected>`
     padding: 1rem 5rem;
     border-radius: 3.6rem;
-    background-color: white;
+    background-color: ${(props) => (props.$isSelected ? "#694E16" : "white")};
+    color: ${(props) => (props.$isSelected ? "white" : "black")};
     font-size: 1.7rem;
     font-weight: 700;
     cursor: pointer;
@@ -72,5 +81,16 @@ export const PickButton = styled.div`
     color: white;
   }
 `;
+
+export const PickedContent = {
+  Rate: styled.div`
+    margin-top: 2.3rem;
+    font-size: 2.7rem;
+    font-weight: 700;
+  `,
+  Reviews: styled.div``,
+  Review: styled.div``,
+  Img: styled.div``,
+};
 export const Middle = {};
 export const Bottom = {};

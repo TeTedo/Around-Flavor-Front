@@ -4,10 +4,15 @@ import {
   MarkerF,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import { PlaceModal } from "components/modal/place/PlaceModal";
 import { MAP_SIZE } from "constants/mapConstant";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  centerSelector,
+  openSelector,
+  radiusSelector,
+  searchCountSelector,
+} from "recoil/mapState";
 import { pickedPlaceSelector } from "recoil/placeState";
 import { MapUtils } from "utils/mapUtils";
 
@@ -16,33 +21,35 @@ import { MapUtils } from "utils/mapUtils";
  * https://www.npmjs.com/package/@react-google-maps/api
  */
 export const Map: React.FC = () => {
-  const [latitude, setLatitude] = useState(0);
-  const [longitude, setLongitude] = useState(0);
-  const [radius, setRadius] = useState(300);
   const [circle, setCircle] = useState<google.maps.Circle | null>(null);
   const [randMarker, setRandMarker] = useState<google.maps.Marker | null>(null);
   const [noNearPlace, setNoNearPlace] = useState<boolean>(false);
   const [cachePlaces, setCachePlaces] = useState<
     google.maps.places.PlaceResult[]
   >([]);
-  const [openNow, setOpenNow] = useState<boolean>(true);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  const searchCount = useRecoilValue(searchCountSelector);
+  const [center, setCenter] = useRecoilState(centerSelector);
+  const setPickedPlace =
+    useSetRecoilState<google.maps.places.PlaceResult | null>(
+      pickedPlaceSelector
+    );
+  const openNow = useRecoilValue<boolean>(openSelector);
+  const radius = useRecoilValue(radiusSelector);
 
   useEffect(() => {
     if (openNow === false) setCachePlaces([]);
   }, [openNow]);
 
-  const setPickedPlace =
-    useSetRecoilState<google.maps.places.PlaceResult | null>(
-      pickedPlaceSelector
-    );
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
         },
         (error) => {
           alert("Unable to get location information.");
@@ -63,13 +70,6 @@ export const Map: React.FC = () => {
     throw new Error("Google Maps API key is not defined.");
   }
 
-  const center = useMemo(() => {
-    return {
-      lat: latitude,
-      lng: longitude,
-    };
-  }, [latitude, longitude]);
-
   const zoom = 16;
   const libraries: Libraries = useMemo(() => ["places"], []);
 
@@ -81,6 +81,8 @@ export const Map: React.FC = () => {
 
   // Callback function to handle map load
   const onLoad = (loadedMap: google.maps.Map | null) => {
+    if (map) return;
+
     if (loadedMap) {
       const circleOptions = {
         strokeColor: "#FF0000", // Red color
@@ -100,7 +102,7 @@ export const Map: React.FC = () => {
   };
 
   // Callback function to perform actions before the map component unmounts
-  const onUnmount = useCallback((map: google.maps.Map | null) => {
+  const onUnmount = useCallback((map: google.maps.Map) => {
     console.log("Do your stuff before map is unmounted");
   }, []);
 
@@ -137,7 +139,7 @@ export const Map: React.FC = () => {
     }
 
     if (cachePlaces[0]) {
-      pickPlaceByCache(cachePlaces, mapService);
+      pickPlaceByCache(cachePlaces);
       return;
     }
 
@@ -182,7 +184,7 @@ export const Map: React.FC = () => {
 
         if (results.length < 20) {
           setCachePlaces(operationalPlaces);
-          pickPlaceByCache(operationalPlaces, mapService);
+          pickPlaceByCache(operationalPlaces);
         } else {
           performSearch(mapService, false);
         }
@@ -190,10 +192,7 @@ export const Map: React.FC = () => {
     );
   };
 
-  const pickPlaceByCache = (
-    cache: google.maps.places.PlaceResult[],
-    mapService: google.maps.places.PlacesService
-  ) => {
+  const pickPlaceByCache = (cache: google.maps.places.PlaceResult[]) => {
     const len = cache.length;
     const rand = Math.floor(Math.random() * len);
     const randPlace = cache[rand];
@@ -282,13 +281,17 @@ export const Map: React.FC = () => {
       circle.setRadius(radius);
     }
   }, [radius, map, circle]);
-  // ============================ google map setting ====================================
 
+  useEffect(() => {
+    if (searchCount === 0) return;
+    searchNearbyRestaurants();
+  }, [searchCount]);
+
+  // ============================ google map setting ====================================
   return (
-    <div style={{ width: "100%", height: "100vh" }}>
-      {isLoaded && latitude && longitude && (
+    <div style={{ width: "50%" }}>
+      {isLoaded && center.lat && center.lng && (
         <>
-          <PlaceModal />
           <GoogleMap
             id="search-box-example"
             mapContainerStyle={MAP_SIZE}
@@ -301,26 +304,6 @@ export const Map: React.FC = () => {
           >
             <MarkerF position={center}></MarkerF>
           </GoogleMap>
-          <select
-            onChange={(e) => {
-              setRadius(Number(e.target.value));
-            }}
-            defaultValue={"300"}
-          >
-            <option value="100">100m</option>
-            <option value="300">300m</option>
-            <option value="500">500m</option>
-            <option value="1000">1km</option>
-          </select>
-          <select
-            onChange={(e) => {
-              setOpenNow(e.target.value === "open" ? true : false);
-            }}
-            defaultValue={"open"}
-          >
-            <option value={"open"}>Open Now</option>
-            <option value={"all"}>All Restaurant</option>
-          </select>
           <button onClick={searchNearbyRestaurants}>Random Pick!</button>
         </>
       )}

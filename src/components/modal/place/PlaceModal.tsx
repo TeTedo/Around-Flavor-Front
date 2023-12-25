@@ -2,19 +2,31 @@ import React, { useEffect, useState } from "react";
 import {
   ContentWrapper,
   PickButton,
+  PickedContent,
+  PickedContentWrapper,
+  PickedTitle,
   PlaceModalWrapper,
   SelectOption,
   Title,
 } from "./PlaceModal.style";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { pickedPlaceSelector } from "recoil/placeState";
+import {
+  openSelector,
+  radiusSelector,
+  searchCountSelector,
+} from "recoil/mapState";
 
 export const PlaceModal = () => {
+  const [radius, setRadius] = useRecoilState(radiusSelector);
+  const [openState, setOpenState] = useRecoilState(openSelector);
+
   const pickedPlace = useRecoilValue<google.maps.places.PlaceResult | null>(
     pickedPlaceSelector
   );
   const [placeDetails, setPlaceDetails] =
     useState<google.maps.places.PlaceResult | null>(null);
+  const [searchCount, setSearchCount] = useRecoilState(searchCountSelector);
 
   useEffect(() => {
     if (!pickedPlace) return;
@@ -34,11 +46,17 @@ export const PlaceModal = () => {
     }
   }, [pickedPlace]);
 
+  const searchRandPlace = () => {
+    setSearchCount(searchCount);
+  };
+
+  console.log(placeDetails);
+
   return (
     <>
-      {/* pickedPlace */}
-      {!pickedPlace && (
-        <PlaceModalWrapper $isPicked={pickedPlace !== null}>
+      <PlaceModalWrapper>
+        {/* no pickedPlace */}
+        {!pickedPlace && (
           <ContentWrapper>
             <Title>
               <div>How about</div>
@@ -49,23 +67,63 @@ export const PlaceModal = () => {
                 The distance between me and the restaurant
               </SelectOption.Title>
               <SelectOption.BtnWrapper>
-                <SelectOption.Btn>100M</SelectOption.Btn>
-                <SelectOption.Btn>300M</SelectOption.Btn>
-                <SelectOption.Btn>500M</SelectOption.Btn>
-                <SelectOption.Btn>1KM</SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setRadius(100)}
+                  $isSelected={radius === 100}
+                >
+                  100M
+                </SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setRadius(300)}
+                  $isSelected={radius === 300}
+                >
+                  300M
+                </SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setRadius(500)}
+                  $isSelected={radius === 500}
+                >
+                  500M
+                </SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setRadius(1000)}
+                  $isSelected={radius === 1000}
+                >
+                  1KM
+                </SelectOption.Btn>
               </SelectOption.BtnWrapper>
             </SelectOption.Wrapper>
             <SelectOption.Wrapper>
               <SelectOption.Title>State of restaurant</SelectOption.Title>
               <SelectOption.BtnWrapper>
-                <SelectOption.Btn>Open now</SelectOption.Btn>
-                <SelectOption.Btn>All</SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setOpenState(true)}
+                  $isSelected={openState === true}
+                >
+                  Open now
+                </SelectOption.Btn>
+                <SelectOption.Btn
+                  onClick={() => setOpenState(false)}
+                  $isSelected={openState === false}
+                >
+                  All
+                </SelectOption.Btn>
               </SelectOption.BtnWrapper>
             </SelectOption.Wrapper>
-            <PickButton>Go Go Go Go</PickButton>
+            <PickButton onClick={searchRandPlace}>Go Go Go Go</PickButton>
           </ContentWrapper>
-        </PlaceModalWrapper>
-      )}
+        )}
+        {/* no pickedPlace */}
+        {pickedPlace && (
+          <PickedContentWrapper>
+            <PickedTitle>
+              <div>{placeDetails?.name}</div>
+            </PickedTitle>
+            <PickedContent.Rate>★ {placeDetails?.rating}</PickedContent.Rate>
+            <PickButton onClick={searchRandPlace}>Pick again</PickButton>
+          </PickedContentWrapper>
+        )}
+      </PlaceModalWrapper>
     </>
   );
 };

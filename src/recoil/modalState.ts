@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-export type ModalType = {
+type ModalType = {
   isOpen: boolean;
   style: React.CSSProperties;
   children: React.ReactNode;
