@@ -120,6 +120,11 @@ export const PlaceModal = () => {
               <div>{placeDetails?.name}</div>
             </PickedTitle>
             <PickedContent.Rate>★ {placeDetails?.rating}</PickedContent.Rate>
+            <PickedContent.ImgWrapper>
+              {placeDetails?.photos?.map((photo) => (
+                <PickedContent.Img src={photo.getUrl()} />
+              ))}
+            </PickedContent.ImgWrapper>
             <PickButton onClick={searchRandPlace}>Pick again</PickButton>
           </PickedContentWrapper>
         )}

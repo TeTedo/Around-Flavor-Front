@@ -304,7 +304,6 @@ export const Map: React.FC = () => {
           >
             <MarkerF position={center}></MarkerF>
           </GoogleMap>
-          <button onClick={searchNearbyRestaurants}>Random Pick!</button>
         </>
       )}
     </div>

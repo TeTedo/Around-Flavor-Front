@@ -19,7 +19,7 @@ export const ContentWrapper = styled.div`
 export const PickedContentWrapper = styled.div`
   width: 100%;
   background: #fdeeeb;
-  padding-left: 7rem;
+  padding: 7rem;
   padding-top: 15rem;
 `;
 
@@ -90,7 +90,16 @@ export const PickedContent = {
   `,
   Reviews: styled.div``,
   Review: styled.div``,
-  Img: styled.div``,
+  ImgWrapper: styled.div`
+    margin-top: 5rem;
+    width: 100%;
+    height: 25rem;
+    overflow: hidden;
+  `,
+  Img: styled.img`
+    width: 100%;
+    height: 100%;
+  `,
 };
 export const Middle = {};
 export const Bottom = {};
