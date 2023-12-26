@@ -51,7 +51,7 @@ export const PickedTitle = styled.div`
   font-weight: 800;
 
   @media screen and (max-width: ${MOBILE_LAYOUT}) {
-    font-size: 8rem;
+    font-size: 6rem;
   }
 `;
 
