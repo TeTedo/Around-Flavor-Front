@@ -1,12 +1,13 @@
 import { Map } from "components/map/Map";
 import { PlaceModal } from "components/modal/place/PlaceModal";
 import React from "react";
+import { HomeWrapper } from "./Home.style";
 
 export const Home: React.FC = () => {
   return (
-    <div style={{ display: "flex" }}>
+    <HomeWrapper>
       <Map />
       <PlaceModal />
-    </div>
+    </HomeWrapper>
   );
 };

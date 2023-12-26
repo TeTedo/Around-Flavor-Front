@@ -50,8 +50,6 @@ export const PlaceModal = () => {
     setSearchCount(searchCount);
   };
 
-  console.log(placeDetails);
-
   return (
     <>
       <PlaceModalWrapper>

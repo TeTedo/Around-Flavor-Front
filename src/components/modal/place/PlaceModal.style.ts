@@ -1,12 +1,18 @@
 import { styled } from "styled-components";
 import { MAP_SIZE } from "constants/mapConstant";
+import { MOBILE_LAYOUT } from "constants/cssConstant";
 
 export const PlaceModalWrapper = styled.div`
   width: 50%;
-  height: ${MAP_SIZE.height};
+  height: 100vh;
   z-index: 99;
   display: flex;
   flex-direction: row-reverse;
+
+  @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    width: 100%;
+    height: 50vh;
+  }
 `;
 
 export const ContentWrapper = styled.div`
@@ -14,6 +20,10 @@ export const ContentWrapper = styled.div`
   background: #eadfc8;
   padding-left: 7rem;
   padding-top: 15rem;
+
+  @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    padding-top: 5rem;
+  }
 `;
 
 export const PickedContentWrapper = styled.div`
@@ -21,16 +31,28 @@ export const PickedContentWrapper = styled.div`
   background: #fdeeeb;
   padding: 7rem;
   padding-top: 15rem;
+
+  @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    padding-top: 5rem;
+  }
 `;
 
 export const Title = styled.div`
   font-size: 5rem;
   font-weight: 800;
+
+  @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    font-size: 8rem;
+  }
 `;
 
 export const PickedTitle = styled.div`
   font-size: 5rem;
   font-weight: 800;
+
+  @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    font-size: 8rem;
+  }
 `;
 
 interface ISelected {
@@ -47,10 +69,18 @@ export const SelectOption = {
   Title: styled.div`
     font-size: 2rem;
     font-weight: 700;
+
+    @media screen and (max-width: ${MOBILE_LAYOUT}) {
+      font-size: 4rem;
+    }
   `,
   BtnWrapper: styled.div`
     display: flex;
     gap: 2rem;
+
+    @media screen and (max-width: ${MOBILE_LAYOUT}) {
+      overflow: auto;
+    }
   `,
   Btn: styled.div<ISelected>`
     padding: 1rem 5rem;
@@ -60,6 +90,9 @@ export const SelectOption = {
     font-size: 1.7rem;
     font-weight: 700;
     cursor: pointer;
+
+    @media screen and (max-width: ${MOBILE_LAYOUT}) {
+    }
   `,
 };
 

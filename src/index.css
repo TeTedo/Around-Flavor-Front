@@ -17,7 +17,7 @@ code {
     /* position: fixed;
     height: 100%;
     overflow: hidden; */
-    font-size: calc(100vw / 375 * 10);
+    font-size: calc(100vw / 900 * 10);
   }
 }
 

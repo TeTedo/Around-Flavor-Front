@@ -15,6 +15,7 @@ import {
 } from "recoil/mapState";
 import { pickedPlaceSelector } from "recoil/placeState";
 import { MapUtils } from "utils/mapUtils";
+import { MapWrapper } from "./Map.style";
 
 /**
  * google map
@@ -289,7 +290,7 @@ export const Map: React.FC = () => {
 
   // ============================ google map setting ====================================
   return (
-    <div style={{ width: "50%" }}>
+    <MapWrapper>
       {isLoaded && center.lat && center.lng && (
         <>
           <GoogleMap
@@ -306,6 +307,6 @@ export const Map: React.FC = () => {
           </GoogleMap>
         </>
       )}
-    </div>
+    </MapWrapper>
   );
 };
