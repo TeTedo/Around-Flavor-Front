@@ -16,6 +16,7 @@ import {
 import { pickedPlaceSelector } from "recoil/placeState";
 import { MapUtils } from "utils/mapUtils";
 import { MapWrapper } from "./Map.style";
+import { adModalState } from "recoil/modalState";
 
 /**
  * google map
@@ -30,6 +31,7 @@ export const Map: React.FC = () => {
   >([]);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
+  const adModalOpen = useSetRecoilState(adModalState);
   const searchCount = useRecoilValue(searchCountSelector);
   const [center, setCenter] = useRecoilState(centerSelector);
   const setPickedPlace =
@@ -285,7 +287,13 @@ export const Map: React.FC = () => {
 
   useEffect(() => {
     if (searchCount === 0) return;
-    searchNearbyRestaurants();
+    if (searchCount % 5 === 0) {
+      adModalOpen(true);
+      searchNearbyRestaurants();
+    } else {
+      adModalOpen(false);
+      searchNearbyRestaurants();
+    }
   }, [searchCount]);
 
   // ============================ google map setting ====================================
