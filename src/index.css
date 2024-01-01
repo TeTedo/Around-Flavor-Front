@@ -12,12 +12,30 @@ code {
     monospace;
 }
 
-@media screen and (max-width: 899px) {
+@media screen and (max-width: 550px) {
   html {
     /* position: fixed;
     height: 100%;
     overflow: hidden; */
-    font-size: calc(100vw / 900 * 10);
+    font-size: calc(100vw / 950 * 10);
+  }
+}
+
+@media screen and (min-width: 551px) and (max-width: 899px) {
+  html {
+    /* position: fixed;
+    height: 100%;
+    overflow: hidden; */
+    font-size: calc(100vw / 1400 * 10);
+  }
+}
+
+@media screen and (min-width: 900px) and (max-width: 1439px) {
+  html {
+    /* position: fixed;
+    height: 100%;
+    overflow: hidden; */
+    font-size: calc(100vw / 1350 * 10);
   }
 }
 
