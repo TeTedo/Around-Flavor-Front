@@ -42,11 +42,13 @@ export const AdsenseModal = () => {
         <AdsenseModalWrapper>
           <AdContent>
             <ins
-              className="kakao_ad_area"
+              className="adsbygoogle"
               style={{ display: "block" }}
-              data-ad-unit="DAN-rWazLnnP6EKAFpmB"
-              data-ad-width="300"
-              data-ad-height="250"
+              data-ad-client="ca-pub-4655641732619143"
+              data-ad-slot="6084325917"
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+              data-adtest="on"
             ></ins>
           </AdContent>
         </AdsenseModalWrapper>
