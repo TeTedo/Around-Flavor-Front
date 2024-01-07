@@ -287,13 +287,9 @@ export const Map: React.FC = () => {
 
   useEffect(() => {
     if (searchCount === 0) return;
-    if (searchCount % 5 === 0) {
-      adModalOpen(true);
-      searchNearbyRestaurants();
-    } else {
-      adModalOpen(false);
-      searchNearbyRestaurants();
-    }
+
+    adModalOpen(false);
+    searchNearbyRestaurants();
   }, [searchCount]);
 
   // ============================ google map setting ====================================
